@@ -8,26 +8,130 @@ import win32gui, win32process
 import os
 import json
 import re
+import asyncio
+import time
+
+# 支持的应用程序列表
+SUPPORTED_APPS = {
+    "记事本": "notepad.exe",
+    "计算器": "calc.exe",
+    "任务管理器": "taskmgr.exe",
+    "资源管理器": "explorer.exe",
+    "控制面板": "control.exe",
+    "注册表编辑器": "regedit.exe",
+    "服务": "services.msc",
+    "磁盘管理": "diskmgmt.msc",
+    "系统信息": "msinfo32.exe",
+}
 
 
-def open_app():
-    from pywinauto.application import Application
+def get_app_by_description(app_description: str) -> str:
+    """
+    根据自然语言描述获取对应的可执行文件名
+
+    Args:
+        app_description: 应用程序的自然语言描述
+
+    Returns:
+        对应的可执行文件名，如果未找到则返回空字符串
+    """
+    app_description = app_description.lower().strip()
+
+    # 直接匹配
+    for desc, exe in SUPPORTED_APPS.items():
+        if app_description in desc.lower() or desc.lower() in app_description:
+            return exe
+
+    # 关键词匹配
+    if any(keyword in app_description for keyword in ["notepad", "笔记", "记事"]):
+        return "notepad.exe"
+    elif any(keyword in app_description for keyword in ["calc", "计算"]):
+        return "calc.exe"
+    elif any(keyword in app_description for keyword in ["taskmgr", "任务", "管理器"]):
+        return "taskmgr.exe"
+    elif any(keyword in app_description for keyword in ["explorer", "资源", "管理器"]):
+        return "explorer.exe"
+    elif any(keyword in app_description for keyword in ["control", "控制", "面板"]):
+        return "control.exe"
+    elif any(keyword in app_description for keyword in ["regedit", "注册表", "编辑器"]):
+        return "regedit.exe"
+    elif any(keyword in app_description for keyword in ["services", "服务"]):
+        return "services.msc"
+    elif any(keyword in app_description for keyword in ["msinfo32", "系统", "信息"]):
+        return "msinfo32.exe"
+    elif any(keyword in app_description for keyword in ["磁盘", "disk", "硬盘"]):
+        return "diskmgmt.msc"
+    return app_description
+
+
+def open_app(app_description: str = "记事本"):
+    """
+    打开指定的应用程序
+
+    Args:
+        app_description: 要打开的应用程序的自然语言描述
+
+    Returns:
+        bool: 是否成功打开应用程序
+    """
 
     try:
-        app = Application(backend="uia").start("notepad.exe")
-        import time
+        # 根据描述获取可执行文件名
+        exe_name = get_app_by_description(app_description)
 
-        time.sleep(10)
+        if not exe_name:
+            print(f"不支持打开的应用程序: {app_description}")
+            print(f"支持的应用包括: {', '.join(SUPPORTED_APPS.keys())}")
+            return False
+
+        asyncio.run(open_exec_by_name(exe_name))
+
+
+        time.sleep(5)
+        return True
+
     except Exception as e:
         print(f"打开应用时出现错误: {e}")
         return False
-    return True
+
+
+async def open_exec_by_name(exe_name: str):
+    from pywinauto.application import Application
+
+    type = "uia"
+    match exe_name:
+        case "services.msc":
+            type = "process"
+        case "diskmgmt.msc":
+            type = "process"
+        case "msinfo32.exe":
+            type = "process"
+        # case "notepad.exe":
+        # case "calc.exe":
+        # case "taskmgr.exe":
+        # case "explorer.exe":
+        case _:
+            type = "uia"
+
+    match type:
+        case "uia":
+            app = Application(backend="uia").start(exe_name)
+            print(f"成功打开应用程序: {exe_name}")
+        case "process":
+            os.system("start " + exe_name)  # 使用start命令打开
 
 
 openApp = StructuredTool.from_function(
     func=open_app,
     name="OpenApp",
-    description="useful for when you need to open an application on Windows system",
+    description="useful for when you need to open an application on Windows system. "
+    "Supports opening: 记事本(notepad), 计算器(calc),  "
+    "任务管理器(taskmgr), 资源管理器(explorer), "
+    "控制面板(control), 注册表编辑器(regedit), 设备管理器, 服务, 磁盘管理(diskmgmt.msc), 系统信息. "
+    "Parameter: app_description (string) - 应用程序的自然语言描述",
+    args_schema={
+        "app_description": {"type": "string", "description": "应用程序的自然语言描述"}
+    },
 )
 
 
@@ -69,7 +173,7 @@ class winAutoAgent:
 示例输入：{{"action": "打开应用", "app": "记事本", "text": "需要输入的文本"}}
 
 可用工具：
-1. OpenApp - 打开Windows应用程序
+1. OpenApp - 打开Windows应用程序，支持打开：记事本、计算器、任务管理器、资源管理器、控制面板、注册表编辑器、设备管理器、服务、磁盘管理、系统信息
 2. KeyboardInput - 在当前活动窗口输入文本
 
 执行规则：
