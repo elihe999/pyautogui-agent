@@ -109,86 +109,14 @@ class winAutoAgent:
         print(f"{self.agent_custom_chat_executor_1.invoke({'content': content})}")
 
 
-class NLPParserAgent:
-    def __init__(self):
-        from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-
-        self.llm = ChatOllama(base_url="http://localhost:11434", model="qwen3:4b")
-
-        self.prompt = ChatPromptTemplate.from_template(
-            """你是一个专业的电脑操作指令解析器。请将用户的自然语言指令解析为一个JSON数组，每个数组项都是一个操作步骤。
-
-输入要求：用户描述电脑操作的句子
-输出要求：返回一个JSON数组，格式为 [{{"step": 1, "action": "操作描述"}}, {{"step": 2, "action": "操作描述"}}]
-
-解析规则：
-1. 将复合指令拆分为独立的操作步骤
-2. 每个步骤应该是原子性的单一操作
-3. 保持原指令的语义完整性
-4. 使用中文描述操作步骤
-5. 识别常见的电脑操作：打开应用、输入文字、点击按钮、浏览网页等
-
-示例：
-输入："帮我打开记事本输入123"
-输出：[{{"step": 1, "action": "打开记事本"}}, {{"step": 2, "action": "输入文字123"}}]
-
-输入："先打开浏览器访问百度然后搜索Python教程"
-输出：[{{"step": 1, "action": "打开浏览器"}}, {{"step": 2, "action": "访问百度网站"}}, {{"step": 3, "action": "搜索Python教程"}}]
-
-现在请解析以下指令：
-{instruction}
-
-请只返回JSON数组，不要包含任何其他文本。/no_think"""
-        )
-
-    def parse_instruction(self, instruction: str):
-        try:
-            # 创建对话链，将提示词与语言模型连接起来
-            chain = self.prompt | self.llm
-
-            # 调用链并生成回答，传入指令作为参数
-            result = chain.invoke({"instruction": instruction})
-
-            # 获取回答文本并清理 <think>...</think> 内容
-            response_text = result.content or ""
-            if type(response_text) != str:
-                response_text = str(response_text)
-            # 删除 <think> 标签及其中的内容（支持跨行和大小写）
-            response_text = re.sub(
-                r"<think\b[^>]*>.*?</think>",
-                "",
-                response_text,
-                0,
-                flags=re.DOTALL | re.IGNORECASE,
-            )
-
-            # 提取首个 JSON 数组（[...]）并返回其字符串表示，优先返回解析后的 JSON （保持中文）
-            start = response_text.find("[")
-            end = response_text.rfind("]") + 1
-            if start != -1 and end != -1 and end > start:
-                json_text = response_text[start:end].strip()
-                try:
-                    parsed = json.loads(json_text)
-                    return json.dumps(parsed, ensure_ascii=False)
-                except Exception:
-                    # 如果无法解析为 JSON，返回提取的文本片段
-                    return json_text
-
-            # 若未找到数组，返回清理后的原始文本
-            return response_text.strip()
-
-        except Exception as e:
-            print(f"解析过程中出现错误: {e}")
-            return ""
-
-
 if __name__ == "__main__":
-    agent = NLPParserAgent()
-    jsonStr = agent.parse_instruction("打开记事本并输入文字123")
-    if isinstance(jsonStr, list):
-        # 变成字符串
-        result = " \n ".join(str(item) for item in jsonStr)
-        jsonStr = result
-    print(jsonStr)
-    agent = winAutoAgent()
-    agent.execute(jsonStr)
+    # agent = NLPParserAgent()
+    # jsonStr = agent.parse_instruction("打开记事本并输入文字123")
+    # if isinstance(jsonStr, list):
+    #     # 变成字符串
+    #     result = " \n ".join(str(item) for item in jsonStr)
+    #     jsonStr = result
+    # print(jsonStr)
+    # agent = winAutoAgent()
+    # agent.execute(jsonStr)
+    pass
