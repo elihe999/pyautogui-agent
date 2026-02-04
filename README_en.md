@@ -22,8 +22,12 @@ This project uses LangChain with Ollama to parse natural language commands and e
   - langchain-ollama
   - langchain-core
   - langchain-community
+  - langgraph
   - pywinauto
+  - pyautogui
   - pywin32
+  - icalendar
+  - pytz
 
 ### Extra Features
 
@@ -32,12 +36,11 @@ This project uses LangChain with Ollama to parse natural language commands and e
 (asr)[https://github.com/openai/whisper]
 (asr-server)[https://github.com/ahmetoner/whisper-asr-webservice]
 
-
 ## Installation
 
 ```bash
 # Install dependencies
-pip install langchain-ollama langchain-core langchain-community pywinauto pywin32
+pip install langchain-ollama langchain-core langchain-community pywinauto pyautogui pywin32
 
 # Start Ollama server
 ollama serve
@@ -45,6 +48,7 @@ ollama serve
 # Pull required model
 ollama pull qwen3:4b
 ollama pull qwen3:0.6b
+ollama pull qwen-vl:latest
 ```
 
 ## Usage

@@ -1,11 +1,10 @@
 from langchain_ollama import ChatOllama
-from langchain_core.prompts import ChatPromptTemplate
 import json
 
 
 class NLPParserAgent:
     def __init__(self):
-        from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+        from langchain_core.prompts import ChatPromptTemplate
 
         self.llm = ChatOllama(base_url="http://localhost:11434", model="qwen3:0.6b")
 
@@ -25,26 +24,33 @@ class NLPParserAgent:
 - 服务、services -> services.msc
 - 系统信息、msinfo32 -> msinfo32.exe
 - 磁盘管理、disk、硬盘 -> diskmgmt.msc
+- 创建日程、添加日程、安排会议、创建会议、导出日历、添加到日历 -> calendar （将日历相关指令映射到"calendar"应用）
 - 如果未找到匹配应用，app字段请保持原样或为空字符串
 
 代理类型(agent_type)判断规则：
 - 如果 app 为 notepad.exe，则 agent_type 为 "notebook"
+- 如果 app 为 calendar，则 agent_type 为 "calendar"
 - 如果动作是连续的，例如"打开记事本输入123"，即使现在是下一步‘输入123’， agent_type 依然为 "notebook"，因为要根据上文判断。
 
 解析规则：
 1. **完整性检查（CRITICAL）**：必须确保所有步骤的内容组合起来能覆盖原始指令的全部语义。不要丢失任何数字、文本或参数。例如"输入123"，"123"必须包含在action字段中。
 2. **动作合并**：将动作与内容合并在`action`字段中。例如`action`应该是"输入文本123"，而不是简单的"输入文本"。
-3. 识别操作类型（如：打开应用、输入文本、点击按钮等）。
+3. 识别操作类型（如：打开应用、输入文本、点击按钮、创建日程等）。对于日历创建，请把事件的关键字段用键值对形式包含在`action`字段，例如：
+   "创建事件: summary=公司团建; dtstart=2026-02-13 14:00; dtend=2026-02-13 17:00; tz=Asia/Shanghai; location=市中心公园; filename=meeting.ics"
+   - 若时间是相对描述（如“下周五下午2点”），保留原始文本，不要尝试解析为具体日期。
 4. 根据映射规则确定app字段的值。
 5. 根据app字段确定agent_type字段的值。
 6. 只有step, action, app, agent_type字段。
 
 示例：
 输入："帮我打开记事本输入123"
-输出：[{{"step": 1, "action": "打开应用", "app": "notepad.exe", "agent_type": "notebook"}}, {{"step": 2, "action": "输入文本123", "app": "notepad.exe", "agent_type": "notebook"}}]
+输出: [{{"step": 1, "action": "打开应用", "app": "notepad.exe", "agent_type": "notebook"}}, {{"step": 2, "action": "输入文本123", "app": "notepad.exe", "agent_type": "notebook"}}]
 
-输入："启动计算器"
-输出：[{{"step": 1, "action": "打开应用", "app": "calc.exe", "agent_type": "default"}}]
+输入："创建下周五公司团建活动，下午2点到5点，在市中心公园举行，导出为 meeting.ics"
+输出: [{{"step": 1, "action": "创建事件: summary=公司团建活动; dtstart=下周五 下午14:00; dtend=下周五 下午17:00; tz=Asia/Shanghai; location=市中心公园; filename=meeting.ics", "app": "calendar", "agent_type": "calendar"}}]
+
+输入："读取 test_meeting.ics 并列出事件"
+输出: [{{"step": 1, "action": "读取文件 test_meeting.ics", "app": "calendar", "agent_type": "calendar"}}]
 
 现在请解析以下指令：
 {instruction}
@@ -90,6 +96,4 @@ if __name__ == "__main__":
         steps = parser.parse_instruction(instruction)
         print("解析结果:")
         for step in steps:
-            print(
-                f"  步骤 {step['step']}: Action={step['action']}, App={step.get('app', 'N/A')}, AgentType={step.get('agent_type', 'N/A')}"
-            )
+            print(step)

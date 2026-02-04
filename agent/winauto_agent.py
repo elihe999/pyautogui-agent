@@ -120,7 +120,7 @@ keyboardInput = StructuredTool.from_function(
 )
 
 
-class winAutoAgent:
+class WinAutoAgent:
     def __init__(self):
         from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 

@@ -22,8 +22,12 @@ AI 驱动的 Windows 桌面自动化代理，将自然语言指令转换为可�
   - langchain-ollama
   - langchain-core
   - langchain-community
+  - langgraph
   - pywinauto
+  - pyautogui
   - pywin32
+  - icalendar
+  - pytz
 
 ### 额外功能
 
@@ -36,7 +40,7 @@ AI 驱动的 Windows 桌面自动化代理，将自然语言指令转换为可�
 
 ```bash
 # 安装依赖
-pip install langchain-ollama langchain-core langchain-community pywinauto pywin32
+pip install langchain-ollama langchain-core langchain-community pywinauto pyautogui pywin32
 
 # 启动 Ollama 服务
 ollama serve
@@ -44,6 +48,7 @@ ollama serve
 # 下载所需模型
 ollama pull qwen3:4b
 ollama pull qwen3:0.6b
+ollama pull qwen-vl:latest
 ```
 
 ## 使用方法
@@ -102,6 +107,7 @@ pyautogui-agent/
 ## 可用工具
 
 ### OpenApp
+
 打开 Windows 应用程序。
 
 ```python
@@ -109,6 +115,7 @@ open_app() -> bool
 ```
 
 ### KeyboardInput
+
 向活动窗口发送键盘输入。
 
 ```python
