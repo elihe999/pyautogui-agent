@@ -25,6 +25,14 @@ This project uses LangChain with Ollama to parse natural language commands and e
   - pywinauto
   - pywin32
 
+### Extra Features
+
+- **Voice Input**: Record voice instructions and transcribe them using OpenAI Whisper
+
+(asr)[https://github.com/openai/whisper]
+(asr-server)[https://github.com/ahmetoner/whisper-asr-webservice]
+
+
 ## Installation
 
 ```bash

@@ -25,6 +25,13 @@ AI 驱动的 Windows 桌面自动化代理，将自然语言指令转换为可�
   - pywinauto
   - pywin32
 
+### 额外功能
+
+- **语音输入**：通过麦克风记录语音指令
+
+(asr)[https://github.com/openai/whisper]
+(asr-server)[https://github.com/ahmetoner/whisper-asr-webservice]
+
 ## 安装配置
 
 ```bash
