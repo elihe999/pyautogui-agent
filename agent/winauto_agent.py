@@ -25,51 +25,51 @@ SUPPORTED_APPS = {
 }
 
 
-def get_app_by_description(app_description: str) -> str:
+def get_app_by_description(app: str) -> str:
     """
     根据自然语言描述获取对应的可执行文件名
 
     Args:
-        app_description: 应用程序的自然语言描述
+        app: 应用程序的自然语言描述
 
     Returns:
         对应的可执行文件名，如果未找到则返回空字符串
     """
-    app_description = app_description.lower().strip()
+    app = app.lower().strip()
 
     # 直接匹配
     for desc, exe in SUPPORTED_APPS.items():
-        if app_description in desc.lower() or desc.lower() in app_description:
+        if app in desc.lower() or desc.lower() in app:
             return exe
 
     # 关键词匹配
-    if any(keyword in app_description for keyword in ["notepad", "笔记", "记事"]):
+    if any(keyword in app for keyword in ["notepad", "笔记", "记事"]):
         return "notepad.exe"
-    elif any(keyword in app_description for keyword in ["calc", "计算"]):
+    elif any(keyword in app for keyword in ["calc", "计算"]):
         return "calc.exe"
-    elif any(keyword in app_description for keyword in ["taskmgr", "任务", "管理器"]):
+    elif any(keyword in app for keyword in ["taskmgr", "任务", "管理器"]):
         return "taskmgr.exe"
-    elif any(keyword in app_description for keyword in ["explorer", "资源", "管理器"]):
+    elif any(keyword in app for keyword in ["explorer", "资源", "管理器"]):
         return "explorer.exe"
-    elif any(keyword in app_description for keyword in ["control", "控制", "面板"]):
+    elif any(keyword in app for keyword in ["control", "控制", "面板"]):
         return "control.exe"
-    elif any(keyword in app_description for keyword in ["regedit", "注册表", "编辑器"]):
+    elif any(keyword in app for keyword in ["regedit", "注册表", "编辑器"]):
         return "regedit.exe"
-    elif any(keyword in app_description for keyword in ["services", "服务"]):
+    elif any(keyword in app for keyword in ["services", "服务"]):
         return "services.msc"
-    elif any(keyword in app_description for keyword in ["msinfo32", "系统", "信息"]):
+    elif any(keyword in app for keyword in ["msinfo32", "系统", "信息"]):
         return "msinfo32.exe"
-    elif any(keyword in app_description for keyword in ["磁盘", "disk", "硬盘"]):
+    elif any(keyword in app for keyword in ["磁盘", "disk", "硬盘"]):
         return "diskmgmt.msc"
-    return app_description
+    return app
 
 
-def open_app(app_description: str = "记事本"):
+def open_app(app: str = "记事本"):
     """
     打开指定的应用程序
 
     Args:
-        app_description: 要打开的应用程序的自然语言描述
+        app: 要打开的应用程序的自然语言描述
 
     Returns:
         bool: 是否成功打开应用程序
@@ -77,10 +77,10 @@ def open_app(app_description: str = "记事本"):
 
     try:
         # 根据描述获取可执行文件名
-        exe_name = get_app_by_description(app_description)
+        exe_name = get_app_by_description(app)
 
         if not exe_name:
-            print(f"不支持打开的应用程序: {app_description}")
+            print(f"不支持打开的应用程序: {app}")
             print(f"支持的应用包括: {', '.join(SUPPORTED_APPS.keys())}")
             return False
 
@@ -115,10 +115,11 @@ async def open_exec_by_name(exe_name: str):
 
     match type:
         case "uia":
-            app = Application(backend="uia").start(exe_name)
+            Application(backend="uia").start(exe_name)
             print(f"成功打开应用程序: {exe_name}")
         case "process":
             os.system("start " + exe_name)  # 使用start命令打开
+            print(f"成功start应用: {exe_name}")
 
 
 openApp = StructuredTool.from_function(
@@ -128,9 +129,9 @@ openApp = StructuredTool.from_function(
     "Supports opening: 记事本(notepad), 计算器(calc),  "
     "任务管理器(taskmgr), 资源管理器(explorer), "
     "控制面板(control), 注册表编辑器(regedit), 设备管理器, 服务, 磁盘管理(diskmgmt.msc), 系统信息. "
-    "Parameter: app_description (string) - 应用程序的自然语言描述",
+    "Parameter: app (string) - 应用程序的自然语言描述",
     args_schema={
-        "app_description": {"type": "string", "description": "应用程序的自然语言描述"}
+        "app": {"type": "string", "description": "应用程序的自然语言描述"}
     },
 )
 

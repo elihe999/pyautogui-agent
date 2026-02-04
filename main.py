@@ -6,7 +6,7 @@ if __name__ == "__main__":
     test_commands = [
         # "帮我打开记事本并输入文字123",
         # "打开计算器",
-        "启动硬盘管理"
+        "启动硬盘管理，再打开计算器并输入123"
     ]
     
     nlp_parser = NLPParserAgent()
