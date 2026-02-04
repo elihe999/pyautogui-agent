@@ -4,7 +4,7 @@ AI-powered Windows desktop automation agent that converts natural language instr
 
 ## Overview
 
-This project uses LangChain with Ollama to parse natural language commands and execute Windows UI automation tasks using pywinauto. It can open applications, input text, and perform other Windows operations based on simple voice or text instructions.
+This project uses LangChain with Ollama to parse natural language commands and execute Windows UI automation tasks using pywinauto, pyautogui. It can open applications, input text, and perform other operations based on simple voice or text instructions.
 
 ## Features
 

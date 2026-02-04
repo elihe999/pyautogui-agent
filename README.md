@@ -4,7 +4,7 @@ AI 驱动的 Windows 桌面自动化代理，将自然语言指令转换为可�
 
 ## 项目概述
 
-本项目使用 LangChain 和 Ollama 解析自然语言命令，并通过 pywinauto 执行 Windows UI 自动化任务。它可以根据简单的语音或文字指令打开应用程序、输入文本以及执行其他 Windows 操作。
+本项目使用 LangChain 和 Ollama 解析自然语言命令，并通过 pywinauto, pyautogui 等自动化工具 执行 Windows UI 自动化任务。它可以根据简单的语音或文字指令打开应用程序、输入文本以及执行其他操作。
 
 ## 功能特性
 

@@ -1,32 +1,14 @@
 from langchain_ollama import ChatOllama
 from langchain_core.tools import tool
-from langchain_community.llms import Ollama
 from langchain_community.agent_toolkits.load_tools import load_tools
 from langchain_classic.agents import create_tool_calling_agent, AgentExecutor
 from langchain_core.tools import StructuredTool
-import win32gui, win32process
-import os
-import json
-import re
-import asyncio
+import win32gui
+import win32process
 import time
 
 
-def get_app_by_description(app: str) -> str:
-    """
-    获取对应的可执行文件名
-    注意：具体的映射逻辑已移植到 NLPParserAgent，此处直接返回传入的 app 名称（预期为可执行文件名）
-
-    Args:
-        app: 应用程序的可执行文件名
-
-    Returns:
-        可执行文件名
-    """
-    return app.lower().strip()
-
-
-def open_app(app: str = "记事本"):
+def open_app():
     """
     打开指定的应用程序
 
@@ -38,15 +20,10 @@ def open_app(app: str = "记事本"):
     """
 
     try:
-        # 根据描述获取可执行文件名
-        exe_name = get_app_by_description(app)
+        from pywinauto.application import Application
 
-        if not exe_name:
-            print(f"不支持打开的应用程序: {app}")
-            return False
-
-        asyncio.run(open_exec_by_name(exe_name))
-
+        Application(backend="uia").start("notepad.exe")
+        print("成功打开应用程序: notepad.exe")
 
         time.sleep(5)
         return True
@@ -56,41 +33,10 @@ def open_app(app: str = "记事本"):
         return False
 
 
-async def open_exec_by_name(exe_name: str):
-    from pywinauto.application import Application
-
-    type = "uia"
-    match exe_name:
-        case "services.msc":
-            type = "process"
-        case "diskmgmt.msc":
-            type = "process"
-        case "msinfo32.exe":
-            type = "process"
-        # case "notepad.exe":
-        # case "calc.exe":
-        # case "taskmgr.exe":
-        # case "explorer.exe":
-        case _:
-            type = "uia"
-
-    match type:
-        case "uia":
-            Application(backend="uia").start(exe_name)
-            print(f"成功打开应用程序: {exe_name}")
-        case "process":
-            os.system("start " + exe_name)  # 使用start命令打开
-            print(f"成功start应用: {exe_name}")
-
-
-openApp = StructuredTool.from_function(
+openNotebook = StructuredTool.from_function(
     func=open_app,
-    name="OpenApp",
-    description="useful for when you need to open an application on Windows system. "
-    "Parameter: app (string) - 应用程序的可执行文件名 (e.g. notepad.exe, calc.exe)",
-    args_schema={
-        "app": {"type": "string", "description": "应用程序的可执行文件名"}
-    },
+    name="openNotebook",
+    description="useful for when you need to open notepad.exe",
 )
 
 
@@ -106,8 +52,10 @@ def keyboard_input(
     try:
         Application().connect(process=pid)
     except Exception as e:
-        print(f"Warning: Could not connect to process {pid}: {e}. Trying to send keys anyway.")
-    
+        print(
+            f"Warning: Could not connect to process {pid}: {e}. Trying to send keys anyway."
+        )
+
     send_keys(text, with_spaces=True)
 
     return True
@@ -120,7 +68,7 @@ keyboardInput = StructuredTool.from_function(
 )
 
 
-class winAutoAgent:
+class NotebookAgent:
     def __init__(self):
         from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
@@ -130,29 +78,23 @@ class winAutoAgent:
                 (
                     "system",
                     """
-你是一个专业的电脑操作执行agent，专门处理JSON格式的操作指令。
+你是一个专业的记事本(Notepad)操作执行agent，专门处理JSON格式的操作指令。
 
 输入格式：JSON对象，包含操作指令信息
 示例输入：{{"action": "打开应用", "app": "notepad.exe", "text": "需要输入的文本"}}
 
 可用工具：
-1. OpenApp - 打开Windows应用程序，传入参数app为可执行文件名
+1. openNotebook - 打开记事本
 2. keyboardInput - 在当前活动窗口输入文本
 
 执行规则：
 1. 首先分析JSON指令，确定要执行的操作类型
-2. 如果是打开应用操作，使用OpenApp工具
+2. 如果是打开记事本，使用openNotebook工具
 3. 如果是输入文本操作，使用keyboardInput工具
 4. 如果JSON包含复合操作，按顺序执行多个工具
-5. 如果请求的操作不在工具支持范围内，明确告知用户不支持的操作类型
-6. 执行完成后返回操作结果和状态
+5. 执行完成后返回操作结果和状态
 
-错误处理：
-- 如果应用无法打开，返回错误信息
-- 如果输入操作失败，返回错误信息
-- 如果JSON格式不正确，提示正确的格式要求
-
-请严格遵循JSON指令执行，不要添加额外的操作。
+请严格遵循JSON指令执行。
 
 以下是用户输入的内容：{content}
                    /no_think """,
@@ -163,7 +105,7 @@ class winAutoAgent:
                 MessagesPlaceholder(variable_name="agent_scratchpad"),
             ]
         )
-        tools = [openApp, keyboardInput]
+        tools = [openNotebook, keyboardInput]
         agent_custom_chat_1 = create_tool_calling_agent(
             llm=llm, tools=tools, prompt=prompt_chat_custom_1
         )
@@ -177,4 +119,6 @@ class winAutoAgent:
 
 
 if __name__ == "__main__":
+    # agent = NotebookAgent()
+    # agent.execute(jsonStr)
     pass
